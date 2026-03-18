@@ -1,13 +1,9 @@
-import Decimal from "decimal.js";
+import { Decimal } from "decimal.js";
 import { randomUUID } from "crypto";
 
-Decimal.set({ precision: 28, rounding: Decimal.ROUND_HALF_EVEN });
-
-export function toDecimal(value: string | number): Decimal { return new Decimal(value); }
-
 export function spreadBps(bid: string, ask: string): number {
-  const mid = new Decimal(bid).plus(ask).div(2);
-  return new Decimal(ask).minus(bid).div(mid).mul(10000).toNumber();
+  const mid = new Decimal(bid).plus(new Decimal(ask)).div(2);
+  return new Decimal(ask).minus(new Decimal(bid)).div(mid).mul(10000).toNumber();
 }
 
 export function calcLiquidationPrice(entryPrice: string, leverage: number, side: "LONG" | "SHORT", maintenanceMarginRate: number): string {
@@ -27,7 +23,7 @@ export function liquidationDistancePct(entryPrice: string, liquidationPrice: str
 export function calcPositionSize(accountEquity: string, riskPct: number, entryPrice: string, stopLoss: string): string {
   const equity = new Decimal(accountEquity);
   const riskAmount = equity.mul(riskPct);
-  const priceDiff = new Decimal(entryPrice).minus(stopLoss).abs();
+  const priceDiff = new Decimal(entryPrice).minus(new Decimal(stopLoss)).abs();
   if (priceDiff.isZero()) return "0";
   return riskAmount.div(priceDiff).toFixed(8);
 }
@@ -36,12 +32,11 @@ export function calcPnl(side: "LONG" | "SHORT", entryPrice: string, exitPrice: s
   const entry = new Decimal(entryPrice);
   const exit = new Decimal(exitPrice);
   const qty = new Decimal(size);
-  const direction = side === "LONG" ? 1 : -1;
-  return exit.minus(entry).mul(qty).mul(direction).toFixed(8);
+  return exit.minus(entry).mul(qty).mul(side === "LONG" ? 1 : -1).toFixed(8);
 }
 
 export function calcFee(size: string, price: string, feePct: number): string {
-  return new Decimal(size).mul(price).mul(feePct).toFixed(8);
+  return new Decimal(size).mul(new Decimal(price)).mul(feePct).toFixed(8);
 }
 
 export function calcSharpe(returns: number[], riskFreeRate = 0): number {
@@ -66,12 +61,12 @@ export function calcSortino(returns: number[], riskFreeRate = 0): number {
 
 export function generateClientOrderId(symbol: string, side: string): string {
   const ts = Date.now().toString(36);
-  const rand = randomUUID().replace(/-/g, "").slice(0, 8);
+  const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
   return `ltbot_${symbol.toLowerCase()}_${side.toLowerCase()}_${ts}_${rand}`;
 }
 
 export function generateTradeId(): string {
-  return `trade_${Date.now().toString(36)}_${randomUUID().slice(0, 8)}`;
+  return `trade_${Date.now().toString(36)}_${crypto.randomUUID().slice(0, 8)}`;
 }
 
 export function clamp(value: number, min: number, max: number): number {
