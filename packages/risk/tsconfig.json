@@ -4,3 +4,31 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "src/**/*.test.ts", "src/__tests__"]
 }
+```
+8. Sağ üstte **"Commit changes"** → **"Commit directly to main"** → **"Commit changes"**
+
+---
+
+### Dosya 2: `packages/execution/tsconfig.json`
+
+Aynı adımlar, `packages/execution/tsconfig.json` dosyasını aç → sil → aynı içeriği yapıştır → commit.
+
+---
+
+### Dosya 3: `packages/backtest/tsconfig.json`
+
+Aynı adımlar, `packages/backtest/tsconfig.json` dosyasını aç → sil → aynı içeriği yapıştır → commit.
+
+---
+
+### Dosya 4: `packages/risk/src/engine/RiskEngine.ts`
+
+1. `packages/risk/src/engine/RiskEngine.ts` dosyasını aç
+2. Kalem ikonuna tıkla
+3. En üstte şu satırı bul:
+```
+import Decimal from "decimal.js";
+```
+4. Sadece o satırı şununla değiştir:
+```
+import { Decimal } from "decimal.js";
