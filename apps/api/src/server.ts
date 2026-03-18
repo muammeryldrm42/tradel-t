@@ -151,9 +151,10 @@ async function main() {
   const { app, config } = await createServer();
 
   try {
-    await app.listen({
-      port: config.api.port,
-      host: config.api.host,
+   await app.listen({
+  port: parseInt(process.env["PORT"] ?? String(config.api.port)),
+  host: config.api.host,
+});
     });
     log.info(
       { port: config.api.port, mode: config.execution.mode },
