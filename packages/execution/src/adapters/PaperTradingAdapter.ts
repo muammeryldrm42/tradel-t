@@ -12,7 +12,7 @@
  * It maintains an in-memory simulated portfolio.
  */
 
-import Decimal from "decimal.js";
+import { Decimal } from "decimal.js";
 import { randomUUID } from "crypto";
 import type {
   Symbol,

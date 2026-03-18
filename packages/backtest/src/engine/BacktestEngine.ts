@@ -12,7 +12,7 @@
  * - Parameter sweep support
  */
 
-import Decimal from "decimal.js";
+import { Decimal } from "decimal.js";
 import { randomUUID } from "crypto";
 import type {
   Symbol,

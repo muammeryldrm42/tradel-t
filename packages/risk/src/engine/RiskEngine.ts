@@ -12,7 +12,7 @@
  * - Leverage is COMPUTED, not passed in from signals
  */
 
-import Decimal from "decimal.js";
+import { Decimal } from "decimal.js";
 import {
   type Symbol,
   type Side,
