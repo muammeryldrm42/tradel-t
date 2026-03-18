@@ -66,8 +66,7 @@ export class BacktestEngine {
   constructor(config: BacktestConfig) {
     this.config = config;
     this.ensemble = new EnsembleSignalAggregator();
-    this.riskEngine = new RiskEngine(config.riskParams as Parameters<typeof RiskEngine>[0]);
-  }
+    this.riskEngine = new RiskEngine();
 
   async run(historicalData: Map<Symbol, Map<Interval, Candle[]>>): Promise<BacktestResult> {
     log.info({ id: this.config.id, symbols: this.config.symbols }, "Starting backtest");
