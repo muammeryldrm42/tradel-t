@@ -72,7 +72,7 @@ export class EnsembleSignalAggregator {
     this.config = { ...DEFAULT_ENSEMBLE_CONFIG, ...config };
     this.regimeDetector = new RegimeDetector();
 
-    this.strategies = new Map([
+    this.strategies = new Map<string, IStrategy>([
       ["TREND_FOLLOWING", new TrendFollowingStrategy()],
       ["MEAN_REVERSION", new MeanReversionStrategy()],
       ["BREAKOUT", new BreakoutStrategy()],
