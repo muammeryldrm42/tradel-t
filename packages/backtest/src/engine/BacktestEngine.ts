@@ -27,7 +27,6 @@ import type {
   TradingSignal,
   AccountBalance,
   Ticker,
-  OrderBook,
   BotState,
   StrategyConfig,
 } from "@lighter-bot/common";
@@ -545,7 +544,7 @@ export class BacktestEngine {
       winRate: closed.length > 0 ? wins.length / closed.length : 0,
       totalPnl: totalPnl.toFixed(2),
       totalPnlPct,
-      maxDrawdown: equityCurve.reduce((m, p) => Math.max(m, p.drawdown), 0),
+      maxDrawdownPct: maxDrawdownPt,
       maxDrawdownPct: maxDrawdownPt,
       sharpeRatio: calcSharpe(dailyReturns),
       sortinoRatio: calcSortino(dailyReturns),
