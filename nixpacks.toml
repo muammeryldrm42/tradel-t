@@ -10,7 +10,6 @@ cmds = [
   "npm run build -w packages/strategy",
   "npm run build -w packages/risk",
   "npm run build -w packages/execution",
-  "npm run build -w packages/backtest",
   "npm run db:generate -w apps/api",
   "npm run build -w apps/api"
 ]
