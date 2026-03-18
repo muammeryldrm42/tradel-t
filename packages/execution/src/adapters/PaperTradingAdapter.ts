@@ -357,7 +357,7 @@ export class PaperTradingAdapter {
         this.openPositions.delete(`${position.symbol}_${position.side}`);
         const trade = this.trades.find((t) => t.id === position.tradeId);
         if (trade) {
-          trade.exitPrice = ticker.liquidationPrice ?? liqPrice.toFixed(8);
+          trade.exitPrice = liqPrice.toFixed(8);
           trade.realizedPnl = position.margin.negated().toFixed(8);
           trade.exitTime = Date.now();
           trade.isOpen = false;
