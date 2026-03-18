@@ -16,7 +16,6 @@ import type {
   Symbol,
   TradingSignal,
   EnsembleSignal,
-  RegimeState,
   MarketRegime,
   StrategyConfig,
   Candle,
