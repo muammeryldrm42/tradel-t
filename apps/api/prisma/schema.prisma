@@ -1,0 +1,197 @@
+// Prisma schema for Lighter Trading Bot
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Bot Sessions ─────────────────────────────────────────────────────────────
+
+model BotSession {
+  id              String    @id @default(uuid())
+  startedAt       DateTime  @default(now())
+  stoppedAt       DateTime?
+  mode            String    // DRY_RUN | PAPER | LIVE
+  initialEquity   Decimal   @db.Decimal(18, 8)
+  finalEquity     Decimal?  @db.Decimal(18, 8)
+  totalTrades     Int       @default(0)
+  totalPnl        Decimal?  @db.Decimal(18, 8)
+  stopReason      String?
+  config          Json
+  trades          Trade[]
+  signals         Signal[]
+  auditEvents     AuditEvent[]
+
+  @@map("bot_sessions")
+}
+
+// ─── Signals ──────────────────────────────────────────────────────────────────
+
+model Signal {
+  id                   String      @id @default(uuid())
+  sessionId            String
+  symbol               String
+  direction            String      // LONG | SHORT | FLAT
+  confidence           Decimal     @db.Decimal(6, 4)
+  entryPrice           Decimal     @db.Decimal(18, 8)
+  stopLoss             Decimal     @db.Decimal(18, 8)
+  takeProfit           Decimal     @db.Decimal(18, 8)
+  riskRewardRatio      Decimal     @db.Decimal(8, 4)
+  strategyName         String
+  rationale            String
+  invalidationCond     String
+  timeframe            String
+  agreementScore       Decimal?    @db.Decimal(6, 4)
+  regimeAtSignal       String?
+  riskApproved         Boolean     @default(false)
+  riskScore            Int?
+  riskReasons          String[]
+  riskWarnings         String[]
+  generatedAt          DateTime
+  expiresAt            DateTime
+  trade                Trade?
+
+  session BotSession @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId])
+  @@index([symbol, generatedAt])
+  @@map("signals")
+}
+
+// ─── Trades ───────────────────────────────────────────────────────────────────
+
+model Trade {
+  id              String    @id @default(uuid())
+  sessionId       String
+  signalId        String?   @unique
+  symbol          String
+  side            String    // LONG | SHORT
+  entryPrice      Decimal   @db.Decimal(18, 8)
+  exitPrice       Decimal?  @db.Decimal(18, 8)
+  size            Decimal   @db.Decimal(18, 8)
+  leverage        Int
+  entryFee        Decimal   @db.Decimal(18, 8)
+  exitFee         Decimal   @db.Decimal(18, 8)   @default(0)
+  fundingFees     Decimal   @db.Decimal(18, 8)   @default(0)
+  realizedPnl     Decimal?  @db.Decimal(18, 8)
+  maxDrawdown     Decimal?  @db.Decimal(18, 8)
+  entryTime       DateTime
+  exitTime        DateTime?
+  holdDurationMs  Int?
+  exitReason      String?
+  isOpen          Boolean   @default(true)
+  mode            String    // DRY_RUN | PAPER | LIVE
+  liquidationDist Decimal?  @db.Decimal(6, 4)
+  riskScore       Int?
+
+  session BotSession @relation(fields: [sessionId], references: [id])
+  signal  Signal?    @relation(fields: [signalId], references: [id])
+  orderEvents OrderEvent[]
+
+  @@index([sessionId])
+  @@index([symbol, entryTime])
+  @@index([isOpen])
+  @@map("trades")
+}
+
+// ─── Order Events ─────────────────────────────────────────────────────────────
+
+model OrderEvent {
+  id            String    @id @default(uuid())
+  tradeId       String
+  phase         String
+  symbol        String
+  orderId       String?
+  clientOrderId String?
+  side          String?
+  orderType     String?
+  price         Decimal?  @db.Decimal(18, 8)
+  size          Decimal?  @db.Decimal(18, 8)
+  fillPrice     Decimal?  @db.Decimal(18, 8)
+  fillSize      Decimal?  @db.Decimal(18, 8)
+  fee           Decimal?  @db.Decimal(18, 8)
+  status        String?
+  errorMsg      String?
+  latencyMs     Int?
+  timestamp     DateTime  @default(now())
+  rawPayload    Json?
+
+  trade Trade @relation(fields: [tradeId], references: [id])
+
+  @@index([tradeId])
+  @@map("order_events")
+}
+
+// ─── Backtest Results ─────────────────────────────────────────────────────────
+
+model BacktestRun {
+  id              String    @id @default(uuid())
+  name            String
+  startDate       DateTime
+  endDate         DateTime
+  symbols         String[]
+  initialCapital  Decimal   @db.Decimal(18, 2)
+  finalEquity     Decimal   @db.Decimal(18, 2)
+  totalTrades     Int
+  winRate         Decimal   @db.Decimal(6, 4)
+  totalPnl        Decimal   @db.Decimal(18, 2)
+  totalPnlPct     Decimal   @db.Decimal(8, 4)
+  maxDrawdownPct  Decimal   @db.Decimal(6, 4)
+  sharpeRatio     Decimal   @db.Decimal(8, 4)
+  sortinoRatio    Decimal   @db.Decimal(8, 4)
+  profitFactor    Decimal   @db.Decimal(8, 4)
+  avgHoldTimeMs   Int
+  totalFees       Decimal   @db.Decimal(18, 2)
+  config          Json
+  fullResult      Json?     // full serialized BacktestResult
+  createdAt       DateTime  @default(now())
+  durationMs      Int
+
+  @@index([createdAt])
+  @@map("backtest_runs")
+}
+
+// ─── Audit Events ─────────────────────────────────────────────────────────────
+
+model AuditEvent {
+  id          String    @id @default(uuid())
+  sessionId   String?
+  eventType   String    // KILL_SWITCH | CIRCUIT_BREAKER | CONFIG_CHANGE | MODE_CHANGE | etc.
+  actor       String    // operator | system | bot
+  description String
+  data        Json?
+  severity    String    @default("INFO") // INFO | WARN | ERROR | CRITICAL
+  timestamp   DateTime  @default(now())
+
+  session BotSession? @relation(fields: [sessionId], references: [id])
+
+  @@index([sessionId])
+  @@index([eventType, timestamp])
+  @@map("audit_events")
+}
+
+// ─── Daily PnL Snapshots ──────────────────────────────────────────────────────
+
+model DailySnapshot {
+  id              String    @id @default(uuid())
+  date            DateTime  @db.Date
+  mode            String
+  equity          Decimal   @db.Decimal(18, 2)
+  dailyPnl        Decimal   @db.Decimal(18, 2)
+  dailyPnlPct     Decimal   @db.Decimal(8, 4)
+  tradesCount     Int
+  winningTrades   Int
+  losingTrades    Int
+  feesTotal       Decimal   @db.Decimal(18, 2)
+  fundingTotal    Decimal   @db.Decimal(18, 2)
+  maxPositions    Int
+  killSwitchActive Boolean  @default(false)
+
+  @@unique([date, mode])
+  @@index([date])
+  @@map("daily_snapshots")
+}
