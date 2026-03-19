@@ -6,16 +6,16 @@ import {
   Activity, TrendingUp, TrendingDown, AlertTriangle,
   Shield, Zap, DollarSign, BarChart2,
 } from "lucide-react";
-import { api } from "../lib/api.js";
-import { useDashboardStore } from "../store/index.js";
-import { useLiveUpdates } from "../hooks/useLiveUpdates.js";
-import { Sidebar } from "../components/layout/Sidebar.js";
-import { TopBar } from "../components/layout/TopBar.js";
-import { MetricCard } from "../components/ui/MetricCard.js";
-import { StatusBadge } from "../components/ui/StatusBadge.js";
-import { KillSwitchButton } from "../components/ui/KillSwitchButton.js";
-import { EquityCurveChart } from "../components/charts/EquityCurveChart.js";
-import { AlertBanner } from "../components/ui/AlertBanner.js";
+import { api } from "../lib/api";
+import { useDashboardStore } from "../store/index";
+import { useLiveUpdates } from "../hooks/useLiveUpdates";
+import { Sidebar } from "../components/layout/Sidebar";
+import { TopBar } from "../components/layout/TopBar";
+import { MetricCard } from "../components/ui/MetricCard";
+import { StatusBadge } from "../components/ui/AlertBanner";
+import { KillSwitchButton } from "../components/ui/KillSwitchButton";
+import { EquityCurveChart } from "../components/charts/EquityCurveChart";
+import { AlertBanner } from "../components/ui/AlertBanner";
 
 export default function DashboardPage() {
   useLiveUpdates();
