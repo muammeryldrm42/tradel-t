@@ -8,11 +8,10 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "start:railway": "node -e \"const {execSync}=require('child_process');try{execSync('npx prisma db push --accept-data-loss',{stdio:'inherit'})}catch(e){console.log('DB push failed, continuing...')}\" && node dist/server.js",
+    "start:railway": "node dist/server.js",
     "db:generate": "prisma generate",
     "db:push": "prisma db push --accept-data-loss",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
   },

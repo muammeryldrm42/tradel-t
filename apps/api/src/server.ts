@@ -58,12 +58,15 @@ export async function createServer() {
   await app.register(websocket);
 
   // ── Global error handler ───────────────────────────────────────────────────
- app.setErrorHandler((error: Error & { statusCode?: number; code?: string }, request, reply) => {
-  log.error({ err: error, url: request.url }, "Request error");
-  reply.status((error as any).statusCode ?? 500).send({
-    error: { message: error.message, code: (error as any).code ?? "INTERNAL_ERROR" },
+  app.setErrorHandler((error, request, reply) => {
+    log.error({ err: error, url: request.url }, "Request error");
+    reply.status(error.statusCode ?? 500).send({
+      error: {
+        message: error.message,
+        code: error.code ?? "INTERNAL_ERROR",
+      },
+    });
   });
-});
 
   // ── Initialize bot orchestrator ────────────────────────────────────────────
   const orchestrator = new BotOrchestrator();
@@ -125,7 +128,7 @@ export async function createServer() {
         }));
       }, 2000);
 
-     socket.on("message", (raw: Buffer | string) => {
+      socket.on("message", (raw) => {
         try {
           const msg = JSON.parse(raw.toString()) as { action: string; reason?: string };
           if (msg.action === "kill_switch") {
@@ -152,7 +155,7 @@ async function main() {
 
   try {
     await app.listen({
-      port: parseInt(process.env["PORT"] ?? String(config.api.port)),
+      port: config.api.port,
       host: config.api.host,
     });
     log.info(

@@ -1,92 +1,74 @@
 "use client";
-import useSWR from "swr";
-import { Activity, TrendingUp, TrendingDown, Shield, Zap, DollarSign, BarChart2 } from "lucide-react";
-import { api } from "../lib/api";
-import { useDashboardStore } from "../store/index";
-import { useLiveUpdates } from "../hooks/useLiveUpdates";
-import { Sidebar } from "../components/layout/Sidebar";
-import { TopBar } from "../components/layout/TopBar";
-import { MetricCard } from "../components/ui/MetricCard";
-import { KillSwitchButton } from "../components/ui/KillSwitchButton";
-import { AlertBanner } from "../components/ui/AlertBanner";
-import { EquityCurveChart } from "../components/charts/EquityCurveChart";
+import { useEffect, useState } from "react";
+
+const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export default function DashboardPage() {
-  useLiveUpdates();
-  const { botState, paperSummary, riskState, alerts, wsConnected } = useDashboardStore();
-  const { data, mutate } = useSWR("/api/v1/bot/state", () => api.getBotState(), {
-    refreshInterval: wsConnected ? 0 : 5000,
-    onSuccess: (d) => useDashboardStore.getState().setBotData(d),
-  });
-  const { data: perf } = useSWR("/api/v1/metrics/performance", () => api.getPerformance(), { refreshInterval: 30_000 });
-  const pnlPositive = parseFloat(paperSummary?.realizedPnl ?? "0") >= 0;
+  const [health, setHealth] = useState<Record<string, string> | null>(null);
+  const [botState, setBotState] = useState<Record<string, unknown> | null>(null);
+
+  useEffect(() => {
+    fetch(`${API}/health`).then(r => r.json()).then(setHealth).catch(() => {});
+    fetch(`${API}/api/v1/bot/state`).then(r => r.json()).then(d => setBotState(d.botState)).catch(() => {});
+    const iv = setInterval(() => {
+      fetch(`${API}/api/v1/bot/state`).then(r => r.json()).then(d => setBotState(d.botState)).catch(() => {});
+    }, 5000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const s: React.CSSProperties = { fontFamily: "JetBrains Mono, monospace", background: "#080c14", color: "#e8edf5", minHeight: "100vh", padding: "2rem" };
+  const card: React.CSSProperties = { background: "#0d1421", border: "1px solid #1e2d42", borderRadius: "8px", padding: "1.5rem", marginBottom: "1rem" };
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <TopBar title="Overview" wsConnected={wsConnected} />
-        <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {alerts.map((alert) => <AlertBanner key={alert.id} alert={alert} />)}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className={`status-dot ${botState?.status === "RUNNING" ? "running" : "stopped"}`} />
-              <span className="text-sm text-[--text-secondary]">Bot: <span className="font-medium text-[--text-primary]">{botState?.status ?? "—"}</span></span>
-              <span className="text-sm text-[--text-secondary]">Mode: <span className="font-mono text-[--accent-primary]">{botState?.mode ?? "DRY_RUN"}</span></span>
-            </div>
-            <KillSwitchButton
-              active={botState?.killSwitchActive ?? false}
-              onActivate={() => api.activateKillSwitch("Operator dashboard").then(() => mutate())}
-              onDeactivate={() => api.deactivateKillSwitch().then(() => mutate())}
-            />
+    <div style={s}>
+      <h1 style={{ fontSize: "1.5rem", color: "#3b82f6", marginBottom: "1.5rem" }}>⚡ Lighter Trading Bot</h1>
+
+      <div style={card}>
+        <h2 style={{ color: "#8ea3be", marginBottom: "0.75rem", fontSize: "0.875rem", textTransform: "uppercase" }}>API Health</h2>
+        {health ? (
+          <div style={{ display: "flex", gap: "2rem" }}>
+            <Stat label="Status" value={health.status} color={health.status === "ok" ? "#22c55e" : "#ef4444"} />
+            <Stat label="Mode" value={health.mode} color="#f59e0b" />
+            <Stat label="Bot" value={health.botStatus} color="#8ea3be" />
           </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard icon={<DollarSign size={16} />} label="Paper Balance" value={`$${parseFloat(paperSummary?.balance ?? "0").toLocaleString("en-US", { minimumFractionDigits: 2 })}`} />
-            <MetricCard icon={pnlPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />} label="Realized PnL" value={`${pnlPositive ? "+" : ""}$${parseFloat(paperSummary?.realizedPnl ?? "0").toFixed(2)}`} valueClass={pnlPositive ? "text-positive" : "text-negative"} />
-            <MetricCard icon={<Activity size={16} />} label="Open Positions" value={(paperSummary?.openPositions ?? 0).toString()} />
-            <MetricCard icon={<BarChart2 size={16} />} label="Daily Trades" value={(botState?.dailyTrades ?? 0).toString()} />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard icon={<TrendingUp size={16} />} label="Win Rate" value={perf ? `${(perf.winRate * 100).toFixed(1)}%` : "—"} subtitle={`${perf?.winningTrades ?? 0}W / ${perf?.losingTrades ?? 0}L`} />
-            <MetricCard icon={<Zap size={16} />} label="Total Trades" value={(perf?.totalTrades ?? 0).toString()} />
-            <MetricCard icon={<DollarSign size={16} />} label="Fees Paid" value={perf ? `$${parseFloat(perf.totalFees).toFixed(2)}` : "—"} />
-            <MetricCard icon={<Activity size={16} />} label="Avg Hold" value={perf ? `${perf.avgHoldHours}h` : "—"} />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-            <div className="card p-4 space-y-3">
-              <h3 className="text-xs text-[--text-muted] uppercase tracking-wider flex items-center gap-2"><Shield size={12} /> Risk State</h3>
-              <RiskRow label="Kill Switch" value={riskState?.killSwitchActive ? "ACTIVE" : "Off"} danger={riskState?.killSwitchActive} />
-              <RiskRow label="Circuit Breaker" value={riskState?.circuitBreakerTripped ? "TRIPPED" : "OK"} danger={riskState?.circuitBreakerTripped} />
-              <RiskRow label="Peak Equity" value={`$${parseFloat(riskState?.peakEquity ?? "0").toFixed(2)}`} />
-            </div>
-            <div className="card p-4 space-y-3">
-              <h3 className="text-xs text-[--text-muted] uppercase tracking-wider">Daily Loss</h3>
-              {riskState && Object.entries(riskState.dailyLoss).map(([sym, loss]) => (
-                <RiskRow key={sym} label={sym} value={`$${parseFloat(loss).toFixed(2)}`} danger={parseFloat(loss) > 100} />
-              ))}
-            </div>
-            <div className="card p-4 space-y-3">
-              <h3 className="text-xs text-[--text-muted] uppercase tracking-wider">Consecutive Losses</h3>
-              {riskState && Object.entries(riskState.consecutiveLosses).map(([sym, count]) => (
-                <RiskRow key={sym} label={sym} value={`${count}`} danger={count >= 3} />
-              ))}
-            </div>
-          </div>
-          <div className="card p-4">
-            <h3 className="text-sm font-medium text-[--text-secondary] mb-4">Equity Curve (Paper)</h3>
-            <EquityCurveChart />
-          </div>
-        </main>
+        ) : <p style={{ color: "#4f6785" }}>Connecting...</p>}
       </div>
+
+      <div style={card}>
+        <h2 style={{ color: "#8ea3be", marginBottom: "0.75rem", fontSize: "0.875rem", textTransform: "uppercase" }}>Bot State</h2>
+        {botState ? (
+          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+            <Stat label="Status" value={String(botState.status)} color="#22c55e" />
+            <Stat label="Mode" value={String(botState.mode)} color="#f59e0b" />
+            <Stat label="Positions" value={String(botState.activePositions)} color="#3b82f6" />
+            <Stat label="Daily Trades" value={String(botState.dailyTrades)} color="#8ea3be" />
+            <Stat label="Kill Switch" value={botState.killSwitchActive ? "ACTIVE" : "Off"} color={botState.killSwitchActive ? "#ef4444" : "#22c55e"} />
+          </div>
+        ) : <p style={{ color: "#4f6785" }}>Loading...</p>}
+      </div>
+
+      <div style={card}>
+        <h2 style={{ color: "#8ea3be", marginBottom: "0.75rem", fontSize: "0.875rem", textTransform: "uppercase" }}>API Explorer</h2>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          {["/health", "/api/v1/bot/state", "/api/v1/markets", "/api/v1/trades", "/api/v1/risk/state"].map(path => (
+            <a key={path} href={`${API}${path}`} target="_blank" rel="noreferrer"
+              style={{ color: "#3b82f6", padding: "0.4rem 0.8rem", border: "1px solid #243650", borderRadius: "4px", textDecoration: "none", fontSize: "0.8rem" }}>
+              {path}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ color: "#4f6785", fontSize: "0.75rem" }}>API: {API} | Dashboard v1.0</p>
     </div>
   );
 }
 
-function RiskRow({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
+function Stat({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="flex justify-between items-center text-sm">
-      <span className="text-[--text-muted]">{label}</span>
-      <span className={`font-mono font-medium ${danger ? "text-[--red]" : "text-[--text-secondary]"}`}>{value}</span>
+    <div>
+      <div style={{ fontSize: "0.7rem", color: "#4f6785", marginBottom: "0.25rem" }}>{label}</div>
+      <div style={{ color, fontWeight: 600 }}>{value}</div>
     </div>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useDashboardStore } from "../store/index.js";
-import type { BotStateResponse } from "../lib/api.js";
+import { useDashboardStore } from "../store/index";
+import type { BotStateResponse } from "../lib/api";
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3001/ws";
 

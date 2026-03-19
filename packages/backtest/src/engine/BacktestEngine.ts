@@ -27,6 +27,7 @@ import type {
   TradingSignal,
   AccountBalance,
   Ticker,
+
   BotState,
   StrategyConfig,
 } from "@lighter-bot/common";
@@ -67,6 +68,7 @@ export class BacktestEngine {
     this.config = config;
     this.ensemble = new EnsembleSignalAggregator();
     this.riskEngine = new RiskEngine();
+  }
 
   async run(historicalData: Map<Symbol, Map<Interval, Candle[]>>): Promise<BacktestResult> {
     log.info({ id: this.config.id, symbols: this.config.symbols }, "Starting backtest");
@@ -544,7 +546,6 @@ export class BacktestEngine {
       totalPnl: totalPnl.toFixed(2),
       totalPnlPct,
       maxDrawdownPct: maxDrawdownPt,
-      maxDrawdownPct: maxDrawdownPt,
       sharpeRatio: calcSharpe(dailyReturns),
       sortinoRatio: calcSortino(dailyReturns),
       calmarRatio: maxDrawdownPt > 0 ? totalPnlPct / maxDrawdownPt : 0,
@@ -606,4 +607,3 @@ type SymbolMetrics = {
   avgLeverage: number;
 };
 
-type OrderBook = import("@lighter-bot/common").OrderBook;

@@ -7,15 +7,13 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces --if-present",
-    "build:packages": "npm run build -w packages/common && npm run build -w packages/strategy && npm run build -w packages/risk && npm run build -w packages/execution && npm run build -w packages/backtest",
+    "build:packages": "npm run build -w packages/common && npm run build -w packages/strategy && npm run build -w packages/risk && npm run build -w packages/execution",
     "build:api": "npm run build:packages && npm run build -w apps/api",
     "build:dashboard": "npm run build -w packages/common && npm run build -w apps/dashboard",
     "dev:api": "npm run dev -w apps/api",
     "dev:dashboard": "npm run dev -w apps/dashboard",
     "db:generate": "npm run db:generate -w apps/api",
-    "db:push": "npm run db:push -w apps/api",
-    "test": "npm run test --workspaces --if-present"
+    "db:push": "npm run db:push -w apps/api"
   },
   "engines": {
     "node": ">=20.0.0",

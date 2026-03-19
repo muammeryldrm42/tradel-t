@@ -1,7 +1,7 @@
 "use client";
 import { X, AlertTriangle, CheckCircle, Info, XCircle } from "lucide-react";
-import type { Alert } from "../../store/index.js";
-import { useDashboardStore } from "../../store/index.js";
+import type { Alert } from "../../store/index";
+import { useDashboardStore } from "../../store/index";
 
 const icons = {
   info:    <Info size={14} />,

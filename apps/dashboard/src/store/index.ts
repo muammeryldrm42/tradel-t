@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { BotStateResponse } from "../lib/api.js";
+import type { BotStateResponse } from "../lib/api";
 
 interface DashboardStore {
   // Bot state

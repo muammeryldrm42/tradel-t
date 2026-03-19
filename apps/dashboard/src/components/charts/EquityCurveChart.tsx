@@ -3,7 +3,7 @@ import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
   CartesianGrid, ReferenceLine,
 } from "recharts";
-import { useDashboardStore } from "../../store/index.js";
+import { useDashboardStore } from "../../store/index";
 
 // Dummy data while no trades exist
 const PLACEHOLDER = Array.from({ length: 30 }, (_, i) => ({
