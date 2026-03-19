@@ -1,8 +1,8 @@
 "use client";
-import { Sidebar } from "../../components/layout/Sidebar.js";
-import { TopBar } from "../../components/layout/TopBar.js";
-import { useDashboardStore } from "../../store/index.js";
-import { useLiveUpdates } from "../../hooks/useLiveUpdates.js";
+import { Sidebar } from "../../components/layout/Sidebar";
+import { TopBar } from "../../components/layout/TopBar";
+import { useDashboardStore } from "../../store/index";
+import { useLiveUpdates } from "../../hooks/useLiveUpdates";
 
 export default function Page() {
   useLiveUpdates();
@@ -15,7 +15,7 @@ export default function Page() {
         <main className="flex-1 overflow-y-auto p-6">
           <div className="card p-8 text-center text-[--text-muted]">
             <p className="text-lg font-medium mb-2 text-[--text-primary]">Page</p>
-            <p className="text-sm">Connect the API and database to see live data here.</p>
+            <p className="text-sm">Coming soon.</p>
           </div>
         </main>
       </div>
